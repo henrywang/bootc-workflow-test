@@ -128,16 +128,16 @@ podman login -u "${QUAY_USERNAME}" -p "${QUAY_PASSWORD}" quay.io
 n=0
 until [ "$n" -ge 3 ]
 do
-   podman pull --tls-verify=false "$TIER1_IMAGE_URL" && break
+   podman pull --tls-verify=false --platform "$BUILD_PLATFORM" --quiet "$TIER1_IMAGE_URL" && break
    n=$((n+1))
    sleep 10
 done
 
 greenprint "Build $TEST_OS installation container image"
-podman build --platform "$BUILD_PLATFORM" --tls-verify=false -t "${TEST_IMAGE_NAME}:${QUAY_REPO_TAG}" "$LAYERED_DIR"
+podman build --platform "$BUILD_PLATFORM" --tls-verify=false --quiet -t "${TEST_IMAGE_NAME}:${QUAY_REPO_TAG}" "$LAYERED_DIR"
 
 greenprint "Push $TEST_OS installation container image"
-podman push "${TEST_IMAGE_NAME}:${QUAY_REPO_TAG}" "$TEST_IMAGE_URL"
+podman push --quiet "${TEST_IMAGE_NAME}:${QUAY_REPO_TAG}" "$TEST_IMAGE_URL"
 
 greenprint "Prepare inventory file"
 tee -a "$INVENTORY_FILE" > /dev/null << EOF
@@ -323,9 +323,9 @@ RUN dnf -y install wget && \
 EOF
 
 greenprint "Build $TEST_OS upgrade container image"
-podman build --platform "$BUILD_PLATFORM" --tls-verify=false -t "${TEST_IMAGE_NAME}:${QUAY_REPO_TAG}" -f "$UPGRADE_CONTAINERFILE" .
+podman build --platform "$BUILD_PLATFORM" --tls-verify=false --quiet -t "${TEST_IMAGE_NAME}:${QUAY_REPO_TAG}" -f "$UPGRADE_CONTAINERFILE" .
 greenprint "Push $TEST_OS upgrade container image"
-podman push "${TEST_IMAGE_NAME}:${QUAY_REPO_TAG}" "$TEST_IMAGE_URL"
+podman push --quiet "${TEST_IMAGE_NAME}:${QUAY_REPO_TAG}" "$TEST_IMAGE_URL"
 
 greenprint "Upgrade $TEST_OS system"
 ansible-playbook -v \
